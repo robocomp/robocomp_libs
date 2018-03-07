@@ -1,23 +1,23 @@
 /*
  * Copyright 2016 <copyright holder> <email>
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 
-#include "innermodelplane.h"
+#include "innermodel/innermodeldisplay.h"
 
-InnerModelPlane::InnerModelPlane(QString id_, QString texture_, float width_, float height_,float depth_, int repeat_, float nx_, float ny_, float nz_, float px_, float py_, float pz_, bool collidable_, InnerModelNode *parent_) : InnerModelNode(id_, parent_)
+InnerModelDisplay::InnerModelDisplay(QString id_, uint32_t port_, QString texture_, float width_, float height_,float depth_, int repeat_, float nx_, float ny_, float nz_, float px_, float py_, float pz_, bool collidable_, InnerModelNode *parent_) : InnerModelNode(id_, parent_)
 {
 #if FCL_SUPPORT==1
 	collisionObject = NULL;
@@ -32,6 +32,9 @@ InnerModelPlane::InnerModelPlane(QString id_, QString texture_, float width_, fl
 	depth = depth_;
 	repeat = repeat_;
 	collidable = collidable_;
+	port = port_;
+
+	id = id_;
 
 #if FCL_SUPPORT==1
 	std::vector<fcl::Vec3f> vertices;
@@ -76,61 +79,36 @@ InnerModelPlane::InnerModelPlane(QString id_, QString texture_, float width_, fl
 	triangles.push_back(fcl::Triangle(2,3,6)); // Bottom
 	triangles.push_back(fcl::Triangle(3,6,7));
 
-////
-////   UNCOMMENT THIS CODE TO GENERATE A POINTCLOUD OF THE POINTS IN THE MESHES
-////
-// std::ofstream outputFile;
-// outputFile.open((id.toStdString()+".pcd").c_str());
-// outputFile << "# .PCD v.7 - Point Cloud Data file format\n";
-// outputFile << "VERSION .7\n";
-// outputFile << "FIELDS x y z \n";
-// outputFile << "SIZE 4 4 4\n";
-// outputFile << "TYPE F F F\n";
-// outputFile << "COUNT 1 1 1\n";
-// outputFile << "WIDTH " << vertices.size() << "\n";
-// outputFile << "HEIGHT 1\n";
-// outputFile << "VIEWPOINT 0 0 0 1 0 0 0\n";
-// outputFile << "POINTS " << vertices.size() << "\n";
-// outputFile << "DATA ascii\n";
-// for (size_t i=0; i<vertices.size(); i++)
-// {
-// 	outputFile << vertices[i][0]/1000. << " " << vertices[i][1]/1000. << " " << vertices[i][2]/1000. << "\n";
-// }
-// outputFile.close();
-
-
 	fclMesh = FCLModelPtr(new FCLModel());
 	fclMesh->beginModel();
 	fclMesh->addSubModel(vertices, triangles);
 	fclMesh->endModel();
 	collisionObject = new fcl::CollisionObject(fclMesh);
-	
+
 #endif
 }
 
-
-
-void InnerModelPlane::print(bool verbose)
+void InnerModelDisplay::updateTexture(QString texture_)
 {
-	if (verbose) normal.print(QString("Plane: ")+id);
+  texture = texture_;
 }
 
-
-
-void InnerModelPlane::save(QTextStream &out, int tabs)
+void InnerModelDisplay::print(bool verbose)
 {
-// 	float width, height, depth;
+	if (verbose) normal.print(QString("Display: ")+id);
+}
+
+void InnerModelDisplay::save(QTextStream &out, int tabs)
+{
 	for (int i=0; i<tabs; i++) out << "\t";
 	out << "<plane id=\"" << id << "\" texture=\"" << texture << "\" size=\"" << QString::number(width,'g', 10)<<","<<QString::number( height,'g', 10)<<","
-	<<QString::number( depth,'g', 10) << "\" repeat=\"" << QString::number(repeat, 'g', 10) << "\" nx=\"" << QString::number(normal(0), 'g', 10) 
-	<< "\" ny=\"" << QString::number(normal(1), 'g', 10) << "\" nz=\"" 
-	<< QString::number(normal(2), 'g', 10) << "\" px=\"" << QString::number(point(0), 'g', 10) << "\" py=\"" << QString::number(point(1), 'g', 10) 
-	<< "\" pz=\"" << QString::number(point(2), 'g', 10) <<"\" collide=\""<< QString::number(collidable,'g',10)<< "\" />\n";
+	<<QString::number( depth,'g', 10) << "\" repeat=\"" << QString::number(repeat, 'g', 10) << "\" nx=\"" << QString::number(normal(0), 'g', 10)
+	<< "\" ny=\"" << QString::number(normal(1), 'g', 10) << "\" nz=\""
+	<< QString::number(normal(2), 'g', 10) << "\" px=\"" << QString::number(point(0), 'g', 10) << "\" py=\"" << QString::number(point(1), 'g', 10)
+	<< "\" pz=\"" << QString::number(point(2), 'g', 10) <<"\" collide=\""<< QString::number(collidable,'g',10)<< "\""<< "\" port=\"" << port <<" />\n";
 }
 
-
-
-void InnerModelPlane::setUpdatePointers(float *nx_, float *ny_, float *nz_, float *px_, float *py_, float *pz_)
+void InnerModelDisplay::setUpdatePointers(float *nx_, float *ny_, float *nz_, float *px_, float *py_, float *pz_)
 {
 	nx = nx_;
 	ny = ny_;
@@ -142,12 +120,7 @@ void InnerModelPlane::setUpdatePointers(float *nx_, float *ny_, float *nz_, floa
 	fixed = false;
 }
 
-
-
-
-
-
-void InnerModelPlane::update(float nx_, float ny_, float nz_, float px_, float py_, float pz_)
+void InnerModelDisplay::update(float nx_, float ny_, float nz_, float px_, float py_, float pz_)
 {
 	normal(0) = nx_;
 	normal(1) = ny_;
@@ -158,9 +131,9 @@ void InnerModelPlane::update(float nx_, float ny_, float nz_, float px_, float p
 	fixed = true;
 }
 
-InnerModelNode * InnerModelPlane::copyNode(QHash<QString, InnerModelNode *> &hash, InnerModelNode *parent)
+InnerModelNode * InnerModelDisplay::copyNode(QHash<QString, InnerModelNode *> &hash, InnerModelNode *parent)
 {
-	InnerModelPlane *ret = new InnerModelPlane(id, texture, width, height, depth, repeat, normal(0), normal(1), normal(2), point(0), point(1), point(2), parent);
+	InnerModelDisplay *ret = new InnerModelDisplay(id, port, texture, width, height, depth, repeat, normal(0), normal(1), normal(2), point(0), point(1), point(2), parent);
 	ret->level = level;
 	ret->fixed = fixed;
 	ret->children.clear();
@@ -175,4 +148,3 @@ InnerModelNode * InnerModelPlane::copyNode(QHash<QString, InnerModelNode *> &has
 
 	return ret;
 }
-
