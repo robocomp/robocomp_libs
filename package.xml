@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="2">
-  <name>robocomp core libs</name>
+  <name>robocomp_core_libs</name>
   <version>0.0.1</version>
   <description>Robocomp core libs</description>
   <maintainer email="orensbruli@gmail.com">Esteban Martinena</maintainer>
   <license>GNU V3</license>
-  <build_depend>libqt5-core</build_depend>
+  <build_depend>qtbase5-dev</build_depend>
 </package>
