@@ -6,4 +6,5 @@
   <description>Robocomp core libs</description>
   <maintainer email="orensbruli@gmail.com">Esteban Martinena</maintainer>
   <license>GNU V3</license>
+  <build_depend>libqt5-core</build_depend>
 </package>
